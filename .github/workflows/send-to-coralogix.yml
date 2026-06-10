@@ -1,0 +1,77 @@
+name: Send JSON to Coralogix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "example-rollout.json"
+      - "solution-info.json"
+  workflow_dispatch:
+
+jobs:
+  send-to-coralogix:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Send example-rollout.json
+        run: |
+          PAYLOAD=$(jq -n \
+            --arg key "$CX_SEND_DATA_KEY" \
+            --slurpfile body example-rollout.json \
+            '{
+              privateKey: $key,
+              applicationName: "github-actions",
+              subsystemName: "rollout-config",
+              logEntries: [{
+                severity: 3,
+                text: ($body[0] | tostring)
+              }]
+            }')
+
+          HTTP_STATUS=$(curl -s -o /tmp/cx_response.json -w "%{http_code}" \
+            -X POST "https://ingress.$CX_DOMAIN/logs/v1/bulk" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          echo "Response: $(cat /tmp/cx_response.json)"
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "Failed with HTTP $HTTP_STATUS"
+            exit 1
+          fi
+          echo "example-rollout.json sent successfully (HTTP $HTTP_STATUS)"
+        env:
+          CX_SEND_DATA_KEY: ${{ secrets.CX_SEND_DATA_KEY }}
+          CX_DOMAIN: eu2.coralogix.com
+
+      - name: Send solution-info.json
+        run: |
+          PAYLOAD=$(jq -n \
+            --arg key "$CX_SEND_DATA_KEY" \
+            --slurpfile body solution-info.json \
+            '{
+              privateKey: $key,
+              applicationName: "github-actions",
+              subsystemName: "solution-info",
+              logEntries: [{
+                severity: 3,
+                text: ($body[0] | tostring)
+              }]
+            }')
+
+          HTTP_STATUS=$(curl -s -o /tmp/cx_response.json -w "%{http_code}" \
+            -X POST "https://ingress.$CX_DOMAIN/logs/v1/bulk" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          echo "Response: $(cat /tmp/cx_response.json)"
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "Failed with HTTP $HTTP_STATUS"
+            exit 1
+          fi
+          echo "solution-info.json sent successfully (HTTP $HTTP_STATUS)"
+        env:
+          CX_SEND_DATA_KEY: ${{ secrets.CX_SEND_DATA_KEY }}
+          CX_DOMAIN: eu2.coralogix.com

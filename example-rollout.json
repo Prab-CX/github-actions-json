@@ -1,0 +1,22 @@
+{
+  "default_rollout": {
+    "parallel_deploy": 10,
+    "max_deploy_per_day": 30,
+    "hour_start_of_day": 10,
+    "timezone_start_of_day": "UTC",
+    "auto_rollout": true,
+    "GA": true,
+    "overrides": [
+      {
+        "solution": "cfe-01",
+        "auto_rollout": false
+      },
+      {
+        "solution": "platform-01",
+        "time_of_day_timezone": "UTC",
+        "time_of_day_start": 10,
+        "day_of_week_start": 6
+      }
+    ]
+  }
+}
