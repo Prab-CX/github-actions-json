@@ -18,19 +18,18 @@ jobs:
 
       - name: Send example-rollout.json
         run: |
+          TEXT=$(jq -c '.' example-rollout.json)
           PAYLOAD=$(jq -n \
-            --slurpfile body example-rollout.json \
-            '{
-              applicationName: "github-actions",
-              subsystemName: "rollout-config",
-              logEntries: [{
-                severity: 3,
-                text: ($body[0] | tostring)
-              }]
-            }')
+            --arg text "$TEXT" \
+            '[{
+              "applicationName": "github-actions",
+              "subsystemName": "rollout-config",
+              "severity": 3,
+              "text": $text
+            }]')
 
           HTTP_STATUS=$(curl -s -o /tmp/cx_response.json -w "%{http_code}" \
-            -X POST "https://ingress.eu2.coralogix.com/logs/v1/bulk" \
+            -X POST "https://ingress.eu2.coralogix.com/logs/v1/singles" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $CX_SEND_DATA_KEY" \
             -d "$PAYLOAD")
@@ -46,19 +45,18 @@ jobs:
 
       - name: Send solution-info.json
         run: |
+          TEXT=$(jq -c '.' solution-info.json)
           PAYLOAD=$(jq -n \
-            --slurpfile body solution-info.json \
-            '{
-              applicationName: "github-actions",
-              subsystemName: "solution-info",
-              logEntries: [{
-                severity: 3,
-                text: ($body[0] | tostring)
-              }]
-            }')
+            --arg text "$TEXT" \
+            '[{
+              "applicationName": "github-actions",
+              "subsystemName": "solution-info",
+              "severity": 3,
+              "text": $text
+            }]')
 
           HTTP_STATUS=$(curl -s -o /tmp/cx_response.json -w "%{http_code}" \
-            -X POST "https://ingress.eu2.coralogix.com/logs/v1/bulk" \
+            -X POST "https://ingress.eu2.coralogix.com/logs/v1/singles" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $CX_SEND_DATA_KEY" \
             -d "$PAYLOAD")
