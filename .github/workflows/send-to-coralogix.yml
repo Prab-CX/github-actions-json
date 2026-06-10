@@ -19,10 +19,8 @@ jobs:
       - name: Send example-rollout.json
         run: |
           PAYLOAD=$(jq -n \
-            --arg key "$CX_SEND_DATA_KEY" \
             --slurpfile body example-rollout.json \
             '{
-              privateKey: $key,
               applicationName: "github-actions",
               subsystemName: "rollout-config",
               logEntries: [{
@@ -32,8 +30,9 @@ jobs:
             }')
 
           HTTP_STATUS=$(curl -s -o /tmp/cx_response.json -w "%{http_code}" \
-            -X POST "https://ingress.$CX_DOMAIN/logs/v1/bulk" \
+            -X POST "https://ingress.eu2.coralogix.com/logs/v1/bulk" \
             -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $CX_SEND_DATA_KEY" \
             -d "$PAYLOAD")
 
           echo "Response: $(cat /tmp/cx_response.json)"
@@ -44,15 +43,12 @@ jobs:
           echo "example-rollout.json sent successfully (HTTP $HTTP_STATUS)"
         env:
           CX_SEND_DATA_KEY: ${{ secrets.CX_SEND_DATA_KEY }}
-          CX_DOMAIN: eu2.coralogix.com
 
       - name: Send solution-info.json
         run: |
           PAYLOAD=$(jq -n \
-            --arg key "$CX_SEND_DATA_KEY" \
             --slurpfile body solution-info.json \
             '{
-              privateKey: $key,
               applicationName: "github-actions",
               subsystemName: "solution-info",
               logEntries: [{
@@ -62,8 +58,9 @@ jobs:
             }')
 
           HTTP_STATUS=$(curl -s -o /tmp/cx_response.json -w "%{http_code}" \
-            -X POST "https://ingress.$CX_DOMAIN/logs/v1/bulk" \
+            -X POST "https://ingress.eu2.coralogix.com/logs/v1/bulk" \
             -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $CX_SEND_DATA_KEY" \
             -d "$PAYLOAD")
 
           echo "Response: $(cat /tmp/cx_response.json)"
@@ -74,4 +71,3 @@ jobs:
           echo "solution-info.json sent successfully (HTTP $HTTP_STATUS)"
         env:
           CX_SEND_DATA_KEY: ${{ secrets.CX_SEND_DATA_KEY }}
-          CX_DOMAIN: eu2.coralogix.com
